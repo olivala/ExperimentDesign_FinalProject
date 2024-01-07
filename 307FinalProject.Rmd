@@ -1,0 +1,179 @@
+---
+title: "Final Project"
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-11-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#load data
+```{r}
+library(lme4)
+library(lmerTest)
+```
+
+#df
+```{r}
+Tester.name <- c("Joe", "Alex","Laura", "Jade")
+    Testers <- as.factor(rep(Tester.name,1, each =9))
+Water.Level <- as.factor(rep(2:4, 4, each = 3)) 
+    #W1 = 2 , W2 = 3 , W3 = 4
+Additive <- c("Honey", "Lemon", "Sugar")
+    Additives <- as.factor(rep(Additive,12))
+
+     #A1 = honey , A2 = lemon , A3 = sugar
+Ratings <- c(4,7,6,2,7,6,2,8,7,7,4,5,8,2,5,7,4,5,7,6,8,8,2,7,9,7,7,4,1,9,8,2,9,8,1,6)
+Block <- as.factor(rep(1:2,1,each=18))
+    #Block 1 = Olivia O. , Block 2 = Olivia R.
+    
+Apple.Juice.Data <- data.frame(Block, Water.Level, Additives, Testers, Ratings)
+```
+
+```{r}
+set.seed(2023)
+```
+
+
+
+#Water.Level * Additives + (1 | Block)
+```{r}
+res <- lmer(Ratings ~ Water.Level*Additives+(1 | Block),data=Apple.Juice.Data)
+anova(res)
+summary(res)
+```
+
+##assumption graphs
+```{r}
+plot(res)
+qqnorm(residuals(res))
+qqline(residuals(res))
+```
+#Additives + Water.Level * Additives + (1 | Block)
+```{r}
+res2 <- lmer(Ratings ~ Additives + Water.Level*Additives+(1 | Block),data=Apple.Juice.Data)
+anova(res2)
+summary(res2)
+```
+
+
+##assumption graphs
+```{r}
+plot(res2)
+qqnorm(residuals(res2))
+qqline(residuals(res2))
+```
+#Additives + Water.Level + Water.Level * Additives + (1 | Block)
+```{r}
+res3 <- lmer(Ratings ~ Additives + Water.Level+(1 | Block),data=Apple.Juice.Data)
+anova(res3)
+summary(res3)
+```
+##assumption graphs
+```{r}
+plot(res3)
+qqnorm(residuals(res3))
+qqline(residuals(res3))
+```
+
+#Block+Additives + Water.Level + Water.Level * Additives +(1 | Block:Water.Level)
+```{r}
+res4 <- lmer(Ratings ~ Block+Additives+Water.Level +(1 | Block),data=Apple.Juice.Data)
+anova(res4)
+summary(res4)
+```
+##assumption graphs
+```{r}
+plot(res4)
+qqnorm(residuals(res4))
+qqline(residuals(res4))
+```
+
+
+#Block + Additives + Water.Level + (1 | Block)
+```{r}
+res6 <- lmer(Ratings ~ Block+ Additives+Water.Level +(1 | Block),data=Apple.Juice.Data)
+anova(res6)
+summary(res6)
+```
+##assumption graphs
+```{r}
+plot(res6)
+qqnorm(residuals(res6))
+qqline(residuals(res6))
+```
+
+```{r}
+AIC(res, res2, res3, res4, res5, res6)
+```
+
+```{r}
+anova(res2,res4)
+```
+
+
+
+#Interaction Plot
+```{r}
+interaction.plot(x.factor = Additives, 
+                            trace.factor = Water.Level, 
+                            response = Ratings, 
+                            main = "Interaction Plot for Ratings",
+                            type = "o",
+                            pch=c(8,17,19),
+                            lwd=2,
+                            col = c("darkgoldenrod1", "cornflowerblue","darkgreen"),
+                            ylim=c(2,7),
+                            legend = FALSE)
+legend("bottomright",
+       c("2","3","4"),
+       bty="n",
+       lty=c(1,2),
+       lwd=2,
+       col=c("darkgoldenrod1", "cornflowerblue","darkgreen"), 
+       pch=c(8,17,19),
+       inset = .02,
+       title="Cups of Water Boiled")
+                  
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(res4)
+```
+
+```{r}
+plot(res4)
+```
+
+```{r}
+anova(res3,res2)
+```
+
+$H_0:\alpha_i=0$ for all i
+
+$H_A:\alpha_i/neq0$ for at least one i
+
+$H_0: \beta_j=0$ for all j
+
+$H_A: \beta_j\neq0$ for at least one j
+
+
+
+```{r}
+
+library(devtools)
+library(redres)
+# creates a plot of the conditional studentized residuals versus the fitted values
+plot_redres(res3, type = "std_cond")
+# creates a residual quantile plot for the error term
+plot_resqq(res3)
+# creates normal quantile plots for each random effect
+plot_ranef(res3)
+
+```
+
